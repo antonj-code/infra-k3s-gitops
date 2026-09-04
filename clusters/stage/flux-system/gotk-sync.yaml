@@ -11,7 +11,7 @@ spec:
     branch: main
   secretRef:
     name: flux-system
-  url: ssh://git@gitbox.jnet.lan/jnet-labs/infra-k3s-gitops
+  url: https://gitbox.jnet.lan/jnet-labs/infra-k3s-gitops.git
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
