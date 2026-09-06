@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker-stress
+  namespace: load-test
+  labels:
+    app: worker-stress
+spec:
+  clusterIP: None
+  selector:
+    app: worker-stress
+  ports:
+    - name: dummy
+      port: 80
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: worker-stress
+  namespace: load-test
+  labels:
+    app: worker-stress
+spec:
+  serviceName: worker-stress
+  # Set to 3 to stress all 3 worker nodes and Longhorn, or set to 0 to stop
+  replicas: 0
+  selector:
+    matchLabels:
+      app: worker-stress
+  template:
+    metadata:
+      labels:
+        app: worker-stress
+    spec:
+      affinity:
+        # Schedule only on worker nodes (exclude control-plane / master)
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+                  - key: node-role.kubernetes.io/master
+                    operator: DoesNotExist
+        # Prevent multiple pods from landing on the same node (1 pod per worker)
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: worker-stress
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: stress-ng
+          image: alexeiled/stress-ng:latest
+          imagePullPolicy: IfNotPresent
+          workingDir: /data
+          # Scaled-down parameters: Moderate CPU, RAM, and gentle Longhorn Storage I/O
+          args:
+            - "--cpu"
+            - "2"
+            - "--vm"
+            - "1"
+            - "--vm-bytes"
+            - "512M"
+            - "--iomix"
+            - "1"
+            - "--iomix-bytes"
+            - "256M"
+            - "--temp-path"
+            - "/data"
+            - "--metrics-brief"
+          volumeMounts:
+            - name: longhorn-storage
+              mountPath: /data
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+  # Dynamically provisions a dedicated Longhorn volume for each worker pod
+  volumeClaimTemplates:
+    - metadata:
+        name: longhorn-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn
+        resources:
+          requests:
+            storage: 10Gi
