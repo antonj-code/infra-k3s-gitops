@@ -24,3 +24,7 @@ spec:
       ui:
         type: LoadBalancer
         externalTrafficPolicy: Local
+    defaultSettings:
+      # Worker nodes have a dedicated 50G disk mounted here; the OS /var
+      # volume is only 5G and too small/full to host Longhorn replicas.
+      defaultDataPath: /mnt/storage-data01
