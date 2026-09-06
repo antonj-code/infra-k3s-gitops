@@ -23,7 +23,7 @@ metadata:
 spec:
   serviceName: worker-stress
   # Set to 3 to stress all 3 worker nodes and Longhorn, or set to 0 to stop
-  replicas: 2
+  replicas: 0
   selector:
     matchLabels:
       app: worker-stress
