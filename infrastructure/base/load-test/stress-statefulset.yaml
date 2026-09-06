@@ -51,7 +51,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: stress-ng
-          image: alexeiled/stress-ng:latest
+          image: ghcr.io/alexei-led/stress-ng:0.20.01
           imagePullPolicy: IfNotPresent
           workingDir: /data
           # Scaled-down parameters: Moderate CPU, RAM, and gentle Longhorn Storage I/O
