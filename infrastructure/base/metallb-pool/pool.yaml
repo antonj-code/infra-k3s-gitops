@@ -4,8 +4,12 @@ metadata:
   name: primary-pool
   namespace: metallb-system
 spec:
+  # Must stay outside the DHCP scope (192.168.0.50-192.168.0.250). k3s nodes
+  # take dynamic leases from that scope on every repave, so any overlap lets
+  # MetalLB hand a service an address a node already holds. This range sits
+  # below the scope, beneath the static VIP block at .40-.44.
   addresses:
-  - 192.168.0.50-192.168.0.99
+  - 192.168.0.24-192.168.0.39
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
