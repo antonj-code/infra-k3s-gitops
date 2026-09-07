@@ -5,6 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   interval: 30m
+  timeout: 15m
   chart:
     spec:
       chart: kube-prometheus-stack
@@ -16,8 +17,12 @@ spec:
       interval: 12h
   install:
     crds: Create
+    remediation:
+      retries: 3
   upgrade:
     crds: CreateReplace
+    remediation:
+      retries: 3
   driftDetection:
     mode: enabled
     ignore:
@@ -31,3 +36,40 @@ spec:
         existingSecret: grafana-admin-credentials
         userKey: admin-user
         passwordKey: admin-password
+      persistence:
+        enabled: true
+        type: pvc
+        storageClassName: longhorn
+        accessModes:
+          - ReadWriteOnce
+        size: 5Gi
+      # Longhorn volumes are ReadWriteOnce, so a rolling update would
+      # deadlock with the new pod waiting on a volume the old one holds.
+      deploymentStrategy:
+        type: Recreate
+    prometheus:
+      prometheusSpec:
+        retention: 15d
+        # Kept under the volume size on purpose: the TSDB does not track
+        # PVC capacity, and compaction needs free space to work in.
+        retentionSize: "16GiB"
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: longhorn
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 20Gi
+    alertmanager:
+      alertmanagerSpec:
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: longhorn
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 2Gi

@@ -6,7 +6,7 @@ metadata:
 spec:
   interval: 1m0s
   retryInterval: 1m
-  timeout: 5m
+  timeout: 20m
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -15,6 +15,7 @@ spec:
   wait: true
   dependsOn:
     - name: external-secrets
+    - name: vault-auth-delegator
 #---
 #apiVersion: kustomize.toolkit.fluxcd.io/v1
 #kind: Kustomization
