@@ -5,7 +5,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  path: ./infrastructure/base/metallb-pool
+  path: ./infrastructure/stage/metallb-pool
   prune: true
   dependsOn:
     - name: infrastructure

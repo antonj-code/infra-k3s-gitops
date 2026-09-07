@@ -1,0 +1,21 @@
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: primary-l2
+  namespace: metallb-system
+spec:
+  # Every pool that should be announced has to be named here. A pool left
+  # off this list still gets addresses allocated - the service shows a
+  # tidy EXTERNAL-IP and is silently unreachable, with nothing in its
+  # events to say why. The pool names are identical in every environment;
+  # only the addresses behind them differ, which is why this file is shared
+  # and the pools themselves are not.
+  ipAddressPools:
+  - reserved-pool
+  - primary-pool
+  nodeSelectors:
+  - matchExpressions:
+    - key: node-role.kubernetes.io/control-plane
+      operator: DoesNotExist
+    - key: node-role.kubernetes.io/master
+      operator: DoesNotExist
