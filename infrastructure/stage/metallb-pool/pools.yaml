@@ -16,6 +16,7 @@ spec:
   # to a service that didn't ask for it explicitly; a service claims one with
   # the metallb.universe.tf/loadBalancerIPs annotation. Allocations:
   #   .24  grafana.jnet.lan
+  #   .25  longhorn UI
   autoAssign: false
   addresses:
   - 192.168.0.24-192.168.0.27

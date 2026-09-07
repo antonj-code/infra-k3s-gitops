@@ -19,6 +19,22 @@ spec:
     crds: CreateReplace
   upgrade:
     crds: CreateReplace
+  # The Longhorn 1.6 chart exposes only `type` and `nodePort` under
+  # service.ui - there is no annotations field - so the MetalLB pin has to
+  # be patched onto the rendered Service instead of passed as a value.
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: Service
+              name: longhorn-frontend
+            patch: |
+              apiVersion: v1
+              kind: Service
+              metadata:
+                name: longhorn-frontend
+                annotations:
+                  metallb.universe.tf/loadBalancerIPs: "192.168.0.25"
   values:
     service:
       ui:
