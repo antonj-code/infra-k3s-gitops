@@ -36,6 +36,13 @@ spec:
         existingSecret: grafana-admin-credentials
         userKey: admin-user
         passwordKey: admin-password
+      # Pinned so grafana.jnet.lan keeps resolving to the same address
+      # across rebuilds. .24 lives in reserved-pool, which has autoAssign
+      # off, so nothing else can claim it while this service is down.
+      service:
+        type: LoadBalancer
+        annotations:
+          metallb.universe.tf/loadBalancerIPs: "192.168.0.24"
       persistence:
         enabled: true
         type: pvc
