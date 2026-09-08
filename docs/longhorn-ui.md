@@ -83,34 +83,57 @@ Traefik's basic-auth middleware reads an htpasswd file out of the `users` key.
 external-secrets copies values through verbatim and cannot hash anything, so
 what Vault holds is the finished `user:hash` line, not a plaintext password.
 
-```bash
-htpasswd -nbB admin 'your-password'      # → admin:$2y$05$...
-```
-
-`htpasswd` comes from `httpd-tools` (`dnf install httpd-tools`). `-B` selects
-bcrypt. Unlike the nginx-ingress equivalent, the `$` characters need no
-escaping anywhere in this path.
+Generate the hash and write it in one pipeline, so neither the password nor
+the hash is ever an argument on the command line:
 
 ```bash
-vault kv put secret/k3s-stage/longhorn basic_auth_users='admin:$2y$05$...'
+{ printf 'admin:'; openssl passwd -apr1; } \
+  | vault kv put secret/k3s-stage/longhorn basic_auth_users=-
 ```
 
-The KV mount is `secret`, version 2 — which is why the policy below grants
-`secret/data/...` and not `secret/...`. Check it landed:
+`openssl passwd` with no password argument prompts twice with echo off and
+writes the prompt to stderr, so stdout carries only the hash. `vault kv put`
+reads a value from stdin when given `-`. Nothing reaches shell history, and
+nothing is visible in `ps` — which matters, since a hash on a command line is
+crackable offline by anyone who saw it.
+
+Use `-apr1` specifically. Traefik understands bcrypt, MD5 (`apr1`) and SHA1;
+`openssl passwd -5` and `-6` produce SHA-crypt, which it does **not** parse —
+the symptom is a 401 with correct credentials and nothing in the logs.
+
+For more than one login, the value is newline-separated. The same pipeline
+extends to it, prompting for each in turn:
+
+```bash
+{ printf 'admin:';  openssl passwd -apr1
+  printf 'viewer:'; openssl passwd -apr1
+} | vault kv put secret/k3s-stage/longhorn basic_auth_users=-
+```
+
+Confirm it landed — this prints the hash, not the password:
 
 ```bash
 vault kv get secret/k3s-stage/longhorn
 ```
 
-For more than one login, the value is newline-separated — pass it from a file
-rather than trying to quote a literal newline:
+The KV mount is `secret`, version 2, which is why the policy below grants
+`secret/data/...` and not `secret/...`.
+
+##### If you would rather have bcrypt
+
+`apr1` is MD5-based and weaker than bcrypt against offline cracking. It is a
+reasonable trade in stage, where the hash is only reachable by someone who can
+already read Vault or the Kubernetes Secret. If this pattern reaches prod,
+generate bcrypt instead — either install `httpd-tools` (`dnf install
+httpd-tools`) for `htpasswd -nbB admin`, or without installing anything:
 
 ```bash
-htpasswd -nbB admin 'pw1'  > /tmp/users
-htpasswd -nbB viewer 'pw2' >> /tmp/users
-vault kv put secret/k3s-stage/longhorn basic_auth_users=@/tmp/users
-shred -u /tmp/users
+docker run --rm -it httpd:2-alpine htpasswd -nB admin
 ```
+
+`-nB` prompts rather than taking the password as an argument, keeping the same
+property as the pipeline above. Both emit the same `user:hash` format and drop
+into the same `vault kv put`.
 
 #### Granting the cluster access
 
@@ -186,8 +209,16 @@ curl -kI -u admin:'your-password' https://longhorn.jnet.lan   # expect 200
 
 ## Rotating the password
 
-Write the new hash to the same Vault key. external-secrets picks it up within
-`refreshInterval` (1h), or immediately with:
+Rewrite the same Vault key with the same pipeline used to create it:
+
+```bash
+{ printf 'admin:'; openssl passwd -apr1; } \
+  | vault kv put secret/k3s-stage/longhorn basic_auth_users=-
+```
+
+`vault kv put` replaces the whole secret, so include every user you want to
+keep — anyone omitted here loses access. external-secrets picks the change up
+within `refreshInterval` (1h), or immediately with:
 
 ```bash
 kubectl -n longhorn-system annotate externalsecret longhorn-basic-auth \
