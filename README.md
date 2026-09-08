@@ -39,6 +39,15 @@ Running two independent environments — rather than one cluster — simulates t
 3. Flux picks up the change automatically (default reconciliation interval: 10 minutes for `Kustomization`, 1 minute for `GitRepository` polling) or force it immediately with `flux reconcile kustomization flux-system`.
 4. Verify in `stage` before making the equivalent change in `prod`.
 
+## Runbooks
+
+Some things can't be expressed as manifests — secrets that have to exist in
+Vault before a workload can start, DNS records, one-off corrections to live
+state. Those are written down under `docs/` rather than left in shell history:
+
+- [Longhorn UI](docs/longhorn-ui.md) — exposing it through Traefik with
+  basic auth backed by Vault, and the one-time MetalLB pool fix it depends on.
+
 ## Current state
 
 Both clusters are bootstrapped with Flux v2.9.5 but don't yet have any application workloads defined beyond the Flux system itself — this is the scaffolding for what comes next.
