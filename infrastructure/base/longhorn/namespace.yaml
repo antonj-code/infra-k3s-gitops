@@ -1,0 +1,13 @@
+# Declared explicitly rather than left to the HelmRelease's
+# install.createNamespace, so the stage overlay's ExternalSecret, Middleware
+# and Ingress have a namespace to land in on the first reconcile instead of
+# racing the Helm install that would otherwise create it.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: longhorn-system
+  annotations:
+    # Flux owns this object, so without this a deleted Kustomization - or a
+    # deleted namespace.yaml - would prune the namespace and take every
+    # Longhorn volume in it. Nothing else here is destructive on removal.
+    kustomize.toolkit.fluxcd.io/prune: disabled

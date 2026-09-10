@@ -1,0 +1,24 @@
+# Basic auth is only as private as the connection carrying it, so plain-HTTP
+# requests are bounced to 443 before the credential prompt is ever issued.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: longhorn-redirect-https
+  namespace: longhorn-system
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+# Longhorn's UI has no login of its own - anyone who can reach it can detach
+# volumes - so Traefik supplies the only authentication in front of it.
+# The `users` key of this Secret comes from Vault via the ExternalSecret.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: longhorn-basic-auth
+  namespace: longhorn-system
+spec:
+  basicAuth:
+    secret: longhorn-basic-auth
+    realm: Longhorn

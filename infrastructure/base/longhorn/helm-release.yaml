@@ -19,27 +19,14 @@ spec:
     crds: CreateReplace
   upgrade:
     crds: CreateReplace
-  # The Longhorn 1.6 chart exposes only `type` and `nodePort` under
-  # service.ui - there is no annotations field - so the MetalLB pin has to
-  # be patched onto the rendered Service instead of passed as a value.
-  postRenderers:
-    - kustomize:
-        patches:
-          - target:
-              kind: Service
-              name: longhorn-frontend
-            patch: |
-              apiVersion: v1
-              kind: Service
-              metadata:
-                name: longhorn-frontend
-                annotations:
-                  metallb.universe.tf/loadBalancerIPs: "192.168.0.25"
   values:
     service:
       ui:
-        type: LoadBalancer
-        externalTrafficPolicy: Local
+        # The UI is reached through Traefik, not directly - the per-cluster
+        # overlay owns the Ingress and the basic-auth middleware in front of
+        # it. Longhorn ships no authentication of its own, so this must never
+        # go back to LoadBalancer without auth in front of it.
+        type: ClusterIP
     defaultSettings:
       # Worker nodes have a dedicated 50G disk mounted here; the OS /var
       # volume is only 5G and too small/full to host Longhorn replicas.

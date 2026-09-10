@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: longhorn
+  namespace: longhorn-system
+  annotations:
+    # Middlewares are referenced as <namespace>-<name>@kubernetescrd and are
+    # applied left to right, so the HTTPS redirect runs before the auth
+    # challenge rather than after it.
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      longhorn-system-longhorn-redirect-https@kubernetescrd,longhorn-system-longhorn-basic-auth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    # No secretName: Traefik serves its own default (self-signed) certificate.
+    # Enough to keep the credentials off the wire in clear text; swap in a
+    # cert-manager-issued Secret here once there is an issuer for jnet.lan.
+    - hosts:
+        - longhorn.jnet.lan
+  rules:
+    - host: longhorn.jnet.lan
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: longhorn-frontend
+                port:
+                  number: 80

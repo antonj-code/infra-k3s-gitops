@@ -5,8 +5,14 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  path: ./infrastructure/base/longhorn
+  timeout: 20m
+  path: ./infrastructure/stage/longhorn
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
+  # The UI's basic-auth secret is materialised from Vault, so the CRDs and the
+  # TokenReview permission both have to exist before this reconciles.
+  dependsOn:
+    - name: external-secrets
+    - name: vault-auth-delegator
