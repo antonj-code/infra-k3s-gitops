@@ -1,0 +1,28 @@
+# k3s installs Traefik itself, from a bundled HelmChart in kube-system. A
+# HelmChartConfig is the supported way to feed values into that chart without
+# taking ownership of the install away from k3s - the deploy controller merges
+# this into the chart's values and redeploys.
+#
+# Traefik fronts every Ingress hostname in the cluster, so its address is the
+# one thing the most DNS records point at, and it must not be auto-assigned:
+# an auto-assigned address is reallocated from primary-pool if the Service is
+# ever recreated, which would silently break every name at once. Pinning it
+# claims .26 out of reserved-pool - the same convention Grafana uses at .24.
+#
+# This is deliberately here and not in infra-k3s-bootstrap's k3s manifests
+# directory: that repo stands the cluster up, Flux configures it. The cost is
+# a transient address on a rebuild - k3s creates the Traefik Service before
+# Flux exists, so MetalLB auto-assigns from primary-pool first and this
+# annotation moves it to .26 afterwards, costing one redeploy mid-bootstrap.
+# Accepted knowingly; .26 itself is never at risk, since reserved-pool has
+# autoAssign off and nothing can take it in the meantime.
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    service:
+      annotations:
+        metallb.universe.tf/loadBalancerIPs: "192.168.0.26"

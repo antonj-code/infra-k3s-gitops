@@ -5,6 +5,14 @@
 # instances handing out the same address would both answer ARP for it. The
 # ranges are split rather than shared for that reason, and must never
 # overlap with stage's.
+#
+# Changing these ranges is not a pure GitOps operation. MetalLB's webhook
+# rejects a pool overlapping an existing one, and Flux dry-runs every object
+# in this path against live state before applying any of them - so a commit
+# that shrinks one pool to make room for another is denied on the new pool
+# and never gets far enough to apply the shrink, failing identically on
+# every retry. Narrow or delete the live pool by hand first, then let Flux
+# converge onto what is committed here.
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
