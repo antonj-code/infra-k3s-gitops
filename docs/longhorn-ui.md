@@ -195,7 +195,7 @@ pool and MetalLB may reassign them, so keep them close together. Once
 
 `flux get kustomization longhorn` is not a useful health check here — the
 Kustomization has no `wait: true`, and a failing ExternalSecret still applies
-cleanly, so Flux reports success while the UI returns 500. Check the secret
+cleanly, so Flux reports success while the UI serves nothing. Check the secret
 itself:
 
 ```bash
@@ -206,6 +206,30 @@ kubectl -n metallb-system get ipaddresspools \
 curl -kI https://longhorn.jnet.lan          # expect 401
 curl -kI -u admin:'your-password' https://longhorn.jnet.lan   # expect 200
 ```
+
+### A 404 means the router was never built
+
+Traefik answering `404 page not found` on the right address is the signature of
+a middleware it could not construct — most often `longhorn-basic-auth` pointing
+at a Secret that does not exist, because the Vault steps have not been done or
+the role does not match. Traefik marks the router invalid and drops it rather
+than serving the route unprotected, so the hostname falls through to the
+default 404.
+
+It fails closed by design: a broken Vault path cannot accidentally publish the
+Longhorn UI without authentication. Confirm the cause with
+
+```bash
+kubectl -n kube-system logs deploy/traefik --tail=50 | grep -i middleware
+```
+
+which names the middleware it could not resolve. Nothing needs restarting once
+the Secret appears — Traefik watches it, rebuilds the middleware and registers
+the router on its own, and the 404 becomes a 401.
+
+Note the failure modes are not what you might guess: a *missing Secret* gives
+404, not 500. A 401 with correct credentials usually means the hash format is
+one Traefik cannot parse — see the `-apr1` warning above.
 
 ## Rotating the password
 
