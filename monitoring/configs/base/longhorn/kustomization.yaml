@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - servicemonitor.yaml
+  - prometheusrule.yaml
 # The dashboard is kept as the plain JSON Grafana exports, so changing it is:
 # edit in the UI, export, overwrite the file, commit. Grafana's sidecar loads
 # any ConfigMap labelled grafana_dashboard: "1". The key becomes a file name in

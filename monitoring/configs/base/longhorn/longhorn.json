@@ -82,14 +82,14 @@
       "id": 3,
       "type": "stat",
       "title": "Nodes not ready",
-      "description": "Longhorn nodes whose ready condition is false.",
+      "description": "Longhorn nodes that are not ready or not reporting. Each manager reports only its own node, so this counts ready nodes against the total Longhorn expects rather than looking for zeros.",
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
           "refId": "A",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "count(longhorn_node_status{condition=\"ready\"} == 0) or vector(0)",
+          "expr": "max(longhorn_node_count_total) - (count(longhorn_node_status{condition=\"ready\"} == 1) or vector(0))",
           "instant": true
         }
       ],
@@ -150,11 +150,83 @@
       }
     },
     {
+      "id": 11,
+      "type": "table",
+      "title": "Active alerts",
+      "description": "Longhorn alert rules currently pending or firing, from prometheusrule.yaml next to this dashboard. Display only - nothing is sent anywhere.",
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "ALERTS{alertname=~\"Longhorn.*\"}",
+          "format": "table",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "service": true
+            },
+            "indexByName": { "alertname": 0, "alertstate": 1, "severity": 2 },
+            "renameByName": {
+              "alertname": "Alert",
+              "alertstate": "State",
+              "severity": "Severity",
+              "pvc_namespace": "Namespace",
+              "pvc": "PVC",
+              "volume": "Volume",
+              "node": "Node",
+              "disk": "Disk"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "State" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "firing": { "text": "Firing", "color": "red", "index": 0 },
+                      "pending": { "text": "Pending", "color": "orange", "index": 1 }
+                    }
+                  }
+                ]
+              },
+              { "id": "custom.cellOptions", "value": { "type": "color-background" } }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true, "cellHeight": "sm" }
+    },
+    {
       "id": 5,
       "type": "state-timeline",
       "title": "Volume robustness",
       "description": "When each volume lost or regained replicas.",
-      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 4 },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 9 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -194,7 +266,7 @@
       "id": 6,
       "type": "table",
       "title": "Volumes",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 11 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -317,7 +389,7 @@
       "id": 7,
       "type": "timeseries",
       "title": "Node storage used",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 19 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -340,7 +412,7 @@
       "id": 8,
       "type": "timeseries",
       "title": "Volume throughput",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -369,7 +441,7 @@
       "id": 9,
       "type": "timeseries",
       "title": "Volume IOPS",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 27 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -398,7 +470,7 @@
       "id": 10,
       "type": "timeseries",
       "title": "Volume latency",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 27 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {

@@ -9,6 +9,7 @@ monitoring/configs/
 ├── base/
 │   └── longhorn/
 │       ├── servicemonitor.yaml   # Prometheus scrapes every longhorn-manager
+│       ├── prometheusrule.yaml   # Longhorn alert rules - displayed, not sent
 │       ├── longhorn.json         # the Longhorn dashboard, as Grafana exports it
 │       └── kustomization.yaml    # turns the JSON into a labelled ConfigMap
 └── stage/                        # pulls in base
@@ -41,11 +42,56 @@ are on Longhorn, so on a rebuild Longhorn installs first, and a Longhorn
 release carrying a ServiceMonitor would fail for want of the CRD. Those
 monitors belong here.
 
-Alert and recording rules work the same way, as `PrometheusRule` objects with
-the same `release` label.
-
 Check a new target on `https://prometheus.jnet.lan/targets` — it should list
 one endpoint per pod behind the Service, all `UP`.
+
+## Alert rules — displayed, not sent
+
+Alert rules are `PrometheusRule` objects, and need the same
+`release: kube-prometheus-stack` label as ServiceMonitors. Nothing is sent
+anywhere: Alertmanager's config is the chart default, which routes every
+alert to a receiver called `"null"`. Pending and firing alerts show in three
+places instead:
+
+- `https://prometheus.jnet.lan/alerts` — every rule, grouped, with its state.
+- Grafana, **Alerting → Alert rules**, listed under the Prometheus data source.
+  Grafana reads these from Prometheus; they are not editable there.
+- The **Active alerts** panel on a dashboard, which is a table over
+  Prometheus's `ALERTS` series — see the Longhorn dashboard for the pattern.
+
+The chart ships around 150 rules of its own, covering nodes, kubelets,
+workloads and Prometheus itself, and those show alongside. Two fire all the
+time by design and are not a problem: `Watchdog`, a heartbeat meant to prove
+the pipeline works end to end, and `InfoInhibitor`, which exists to suppress
+info-level alerts.
+
+To start sending alerts later, add a receiver and route — an
+`AlertmanagerConfig` object here, or `alertmanager.config` in the HelmRelease
+values — with any webhook URL or password coming from Vault through an
+ExternalSecret.
+
+### Longhorn rules
+
+`base/longhorn/prometheusrule.yaml`:
+
+| Alert | Fires when | For | Severity |
+| --- | --- | --- | --- |
+| `LonghornVolumeFaulted` | a volume has no healthy replica | 2m | critical |
+| `LonghornVolumeDegraded` | a volume is short of replicas | 30m | warning |
+| `LonghornNodeNotReady` | fewer ready nodes than Longhorn expects | 10m | warning |
+| `LonghornDiskNotReady` | a Longhorn disk is not ready | 10m | warning |
+| `LonghornStorageAlmostFull` | a node's Longhorn storage is over 80% | 15m | warning |
+
+`LonghornVolumeDegraded` waits 30 minutes on purpose. Repaving a worker
+degrades every volume for Longhorn's 10-minute replica replenishment wait
+plus the rebuild, which is expected and visible on the dashboard; the alert
+is for a rebuild that has stalled. 30 minutes is also how long the repave
+scripts in `infra-k3s-bootstrap` wait for volumes to recover.
+
+`LonghornNodeNotReady` counts ready nodes against `longhorn_node_count_total`
+instead of looking for a not-ready status, because each `longhorn-manager`
+reports only its own node — when a node goes down its status series
+disappears rather than turning 0.
 
 ## Adding or changing a dashboard
 
@@ -85,7 +131,9 @@ and they are not in Git.
 
 - **Degraded / Faulted volumes** — volumes short of replicas, and volumes with
   none left. Degraded still serves data; it is one more failure from faulted.
-- **Nodes not ready** and **Storage used** across every Longhorn disk.
+- **Nodes not ready** — nodes Longhorn expects that are not ready or not
+  reporting — and **Storage used** across every Longhorn disk.
+- **Active alerts** — Longhorn rules currently pending or firing.
 - **Volume robustness** over time — when each volume lost or regained
   replicas. A worker being repaved shows as every volume going degraded at
   once, then back to healthy as Longhorn rebuilds onto the new node.

@@ -1,0 +1,83 @@
+# Display only. These show on Prometheus's Alerts page, in Grafana under
+# Alerting -> Alert rules, and in the Longhorn dashboard's Active alerts panel.
+# Nothing is sent anywhere: Alertmanager routes every alert to the "null"
+# receiver, kube-prometheus-stack's default.
+#
+# A node or manager disappearing outright is also covered by the chart's own
+# KubeNodeNotReady, KubeNodeUnreachable and TargetDown rules.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: longhorn
+  namespace: monitoring
+  labels:
+    # kube-prometheus-stack's Prometheus selects only rules carrying this.
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: longhorn
+      rules:
+        - alert: LonghornVolumeFaulted
+          expr: longhorn_volume_robustness == 3
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: Longhorn volume has no healthy replica left
+            description: >-
+              {{ $labels.pvc_namespace }}/{{ $labels.pvc }} ({{ $labels.volume }})
+              is faulted and cannot serve data.
+
+        # Repaving a worker leaves every volume degraded for Longhorn's 10m
+        # replica-replenishment-wait-interval plus the rebuild itself. That is
+        # normal and shows on the dashboard; this fires only when it outlasts
+        # a rebuild - the same 30m budget the repave scripts wait for.
+        - alert: LonghornVolumeDegraded
+          expr: longhorn_volume_robustness == 2
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: Longhorn volume degraded for 30 minutes
+            description: >-
+              {{ $labels.pvc_namespace }}/{{ $labels.pvc }} ({{ $labels.volume }})
+              has been short of replicas for 30 minutes, longer than a normal
+              rebuild takes.
+
+        # Each longhorn-manager reports only its own node, so a node whose
+        # manager is down has no status series at all rather than a 0.
+        # Counting ready nodes against the total Longhorn expects catches both.
+        - alert: LonghornNodeNotReady
+          expr: >-
+            max(longhorn_node_count_total)
+            - (count(longhorn_node_status{condition="ready"} == 1) or vector(0))
+            > 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Longhorn node not ready
+            description: >-
+              {{ $value }} Longhorn node(s) are not ready or not reporting.
+
+        - alert: LonghornDiskNotReady
+          expr: longhorn_disk_status{condition="ready"} == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Longhorn disk not ready
+            description: >-
+              Disk {{ $labels.disk }} on {{ $labels.node }} is not ready;
+              Longhorn will not place or run replicas on it.
+
+        - alert: LonghornStorageAlmostFull
+          expr: longhorn_node_storage_usage_bytes / longhorn_node_storage_capacity_bytes > 0.8
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Longhorn storage above 80% on a node
+            description: >-
+              Longhorn storage on {{ $labels.node }} is
+              {{ $value | humanizePercentage }} full.
