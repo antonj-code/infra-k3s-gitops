@@ -3,8 +3,8 @@
 # taking ownership of the install away from k3s - the deploy controller merges
 # this into the chart's values and redeploys.
 #
-# Traefik fronts every Ingress hostname in the cluster, so its address is the
-# one thing the most DNS records point at, and it must not be auto-assigned:
+# Traefik fronts every Ingress hostname in the cluster, so every one of those
+# names resolves to its address, and it must not be auto-assigned:
 # an auto-assigned address is reallocated from primary-pool if the Service is
 # ever recreated, which would silently break every name at once. Pinning it
 # claims .26 out of reserved-pool.

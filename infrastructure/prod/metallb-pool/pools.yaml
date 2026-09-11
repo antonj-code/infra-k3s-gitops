@@ -34,8 +34,8 @@ metadata:
   name: primary-pool
   namespace: metallb-system
 spec:
-  # Auto-assigned to anything that doesn't care what address it gets
-  # (the Longhorn UI, for one). Stays outside the DHCP scope
-  # (192.168.0.50-.250) and below the static VIP block at .40-.44.
+  # Auto-assigned to anything that doesn't care what address it gets. Stays
+  # outside the DHCP scope (192.168.0.50-.250) and below the static VIP
+  # block at .40-.44.
   addresses:
   - 192.168.0.36-192.168.0.39

@@ -29,8 +29,8 @@ claims `.26` out of `reserved-pool`.
 
 ## Manual steps
 
-Three things live outside the repo and must exist before any of the above
-works. Do them in this order.
+Two things live outside the repo and must exist before any of the above
+works. Do them in this order, then push.
 
 ### 1. Vault
 
@@ -177,29 +177,6 @@ through the CNAME. Confirm the chain resolves:
 dig +short longhorn.jnet.lan   # ingress-stage.jnet.lan. then 192.168.0.26
 ```
 
-### 3. Push, then unblock MetalLB
-
-This last step is a one-off correction, not part of normal operation. The
-`metallb-pool` Kustomization has been failing since the stage/prod pool split:
-MetalLB's webhook rejects `reserved-pool` for overlapping the live
-`primary-pool`, and Flux dry-runs every object against live state before
-applying any of them, so the commit that would shrink `primary-pool` never
-gets far enough to run. Deleting the stale pool breaks the cycle.
-
-```bash
-# Protect Traefik's address across the gap, before reserved-pool exists.
-kubectl -n kube-system annotate svc traefik \
-  metallb.universe.tf/loadBalancerIPs=192.168.0.26 --overwrite
-
-kubectl -n metallb-system delete ipaddresspool primary-pool
-flux -n flux-system reconcile kustomization metallb-pool
-```
-
-Between those two commands, Grafana and Traefik hold addresses belonging to no
-pool and MetalLB may reassign them, so keep them close together. Once
-`metallb-pool` reports Ready the `traefik` Kustomization comes off its
-`dependsOn` and applies the pin.
-
 ## Verifying
 
 `flux get kustomization longhorn` is not a useful health check here — the
@@ -259,6 +236,33 @@ kubectl -n longhorn-system annotate externalsecret longhorn-basic-auth \
 ```
 
 Traefik watches the Secret and reloads the middleware on its own; no restart.
+
+## History: the MetalLB pool split
+
+Getting Traefik onto `.26` first needed a one-off correction to live state.
+It has been done on stage and is not needed again — the live pools now match
+`infrastructure/stage/metallb-pool/pools.yaml` — but it is kept here because
+the same trap applies to any future change that moves addresses between
+pools.
+
+The `metallb-pool` Kustomization had been failing since the stage/prod pool
+split: MetalLB's webhook rejected `reserved-pool` for overlapping the live
+`primary-pool`, and Flux dry-runs every object against live state before
+applying any of them, so the commit that would shrink `primary-pool` never
+got far enough to run. Deleting the stale pool broke the cycle:
+
+```bash
+# Protect Traefik's address across the gap, before reserved-pool exists.
+kubectl -n kube-system annotate svc traefik \
+  metallb.universe.tf/loadBalancerIPs=192.168.0.26 --overwrite
+
+kubectl -n metallb-system delete ipaddresspool primary-pool
+flux -n flux-system reconcile kustomization metallb-pool
+```
+
+Between the delete and the reconcile, anything holding a LoadBalancer address
+belongs to no pool and MetalLB may reassign it, so the two were run back to
+back.
 
 ## Notes
 

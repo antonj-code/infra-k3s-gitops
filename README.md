@@ -22,6 +22,19 @@ clusters/
 - `gotk-sync.yaml` — defines the `GitRepository` (where to pull from) and `Kustomization` (which path to reconcile) for that cluster. Also generated; do not hand-edit.
 - `kustomization.yaml` — the local Kustomize manifest tying the above two together.
 
+Everything else in `clusters/<env>/` is a Flux `Kustomization` per component, pointing at where its manifests actually live. Those are split by what they are, with a `base/` shared between environments and a per-environment overlay on top:
+
+```
+clusters/<env>/*.yaml     # one Flux Kustomization per component
+infrastructure/
+├── base/                 # MetalLB, Longhorn, External Secrets, Vault auth, ...
+├── stage/                # stage overlays: address pools, Traefik, Longhorn UI
+└── prod/
+monitoring/controllers/
+├── base/                 # kube-prometheus-stack
+└── stage/                # Ingresses and Vault-backed secrets
+```
+
 ## Where these clusters — and Flux itself — come from
 
 Nothing here is stood up by hand. The sibling repo [`infra-k3s-bootstrap`](../infra-k3s-bootstrap) owns the whole lifecycle of the `stage` and `prod` k3s clusters: Terraform provisions the VMs on Proxmox, Ansible hardens the OS and installs k3s, and a final CI stage runs `scripts/bootstrap_flux.sh <env>`, which calls `flux bootstrap gitlab` against this repo — pointed at `clusters/<env>` on `main`. That's what generates and commits the `gotk-components.yaml` / `gotk-sync.yaml` files above; it's also why they carry the `DO NOT EDIT` header and why re-running the bootstrap is the correct way to change them, rather than editing by hand.
@@ -34,9 +47,9 @@ Running two independent environments — rather than one cluster — simulates t
 
 ## How to make changes
 
-1. Add or edit manifests under the appropriate `clusters/<env>/` path (application workloads, infrastructure components, etc. — the `flux-system` directories themselves are Flux's own bootstrap output and should be left alone).
+1. Add or edit manifests under `infrastructure/` or `monitoring/` — in `base/` if every environment should get the change, in the environment's overlay if not. A new component also needs a Flux `Kustomization` in `clusters/<env>/` pointing at its path. (The `flux-system` directories are Flux's own bootstrap output and should be left alone.)
 2. Commit and push to `main`.
-3. Flux picks up the change automatically (default reconciliation interval: 10 minutes for `Kustomization`, 1 minute for `GitRepository` polling) or force it immediately with `flux reconcile kustomization flux-system`.
+3. Flux picks up the change automatically. It polls Git every minute, and a new revision triggers every `Kustomization` that uses it, so a push lands within a minute or two; each `Kustomization`'s own `interval` (10 minutes for most) is only how often it re-applies to undo drift. Force it immediately with `flux reconcile kustomization flux-system --with-source`.
 4. Verify in `stage` before making the equivalent change in `prod`.
 
 ## Runbooks
@@ -46,10 +59,14 @@ Vault before a workload can start, DNS records, one-off corrections to live
 state. Those are written down under `docs/` rather than left in shell history:
 
 - [Longhorn UI](docs/longhorn-ui.md) — exposing it through Traefik with
-  basic auth backed by Vault, and the one-time MetalLB pool fix it depends on.
+  basic auth backed by Vault, and the one-time MetalLB pool fix that went
+  with it.
 - [Grafana and Prometheus UIs](docs/monitoring-ui.md) — the same Traefik
   setup, with basic auth in front of Prometheus and Grafana's own login.
 
 ## Current state
 
-Both clusters are bootstrapped with Flux v2.9.5 but don't yet have any application workloads defined beyond the Flux system itself — this is the scaffolding for what comes next.
+Both clusters are bootstrapped with Flux v2.9.5.
+
+- **stage** runs the platform everything else builds on — MetalLB, Longhorn, External Secrets backed by Vault, and configuration for the Traefik that k3s ships with — plus kube-prometheus-stack. The Longhorn, Grafana and Prometheus UIs are served through Traefik. A `load-test` StatefulSet is there for exercising storage and scheduling.
+- **prod** runs nothing beyond Flux itself yet. Its MetalLB address pools are defined under `infrastructure/prod/` but not yet wired into `clusters/prod/`.
