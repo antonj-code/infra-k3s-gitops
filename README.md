@@ -58,11 +58,15 @@ Some things can't be expressed as manifests — secrets that have to exist in
 Vault before a workload can start, DNS records, one-off corrections to live
 state. Those are written down under `docs/` rather than left in shell history:
 
+- [Vault integration](docs/vault.md) — how in-cluster apps log in to Vault,
+  which half `infra-k3s-bootstrap` owns, and adding a new app.
 - [Longhorn UI](docs/longhorn-ui.md) — exposing it through Traefik with
   basic auth backed by Vault, and the one-time MetalLB pool fix that went
   with it.
 - [Grafana and Prometheus UIs](docs/monitoring-ui.md) — the same Traefik
   setup, with basic auth in front of Prometheus and Grafana's own login.
+- [Load test](docs/load-test.md) — running the stress-ng StatefulSet against
+  the workers and Longhorn, and cleaning up the volumes it leaves behind.
 
 ## Current state
 

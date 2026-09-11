@@ -135,6 +135,68 @@ kubectl -n monitoring get cm kube-prometheus-stack-grafana \
   -o jsonpath='{.data.grafana\.ini}' | grep root_url
 ```
 
+## Grafana admin credentials
+
+The Grafana admin login lives beside the Prometheus password:
+`grafana_admin_user` and `grafana_admin_password` in
+`secret/k3s-stage/monitoring`, synced by the `grafana-admin-credentials`
+ExternalSecret and handed to Grafana as `GF_SECURITY_ADMIN_USER` and
+`GF_SECURITY_ADMIN_PASSWORD`.
+
+### First-time setup
+
+They were seeded — together with the `k3s-stage-monitoring` role and policy —
+by `infra-k3s-bootstrap`'s `vault_seed_apps.sh` (see
+[Vault integration](vault.md#layer-2-one-role-and-policy-per-app)):
+
+```bash
+bash scripts/vault_seed_apps.sh stage monitoring monitoring grafana-vault-auth \
+  --secret grafana_admin_user=admin \
+  --secret grafana_admin_password="$(openssl rand -base64 24)"
+```
+
+The password is random and never shown. To read it:
+
+```bash
+vault kv get -field=grafana_admin_password secret/k3s-stage/monitoring
+```
+
+### Changing the password — Vault alone is not enough
+
+Grafana applies `GF_SECURITY_ADMIN_PASSWORD` only when it creates the admin
+user, on first start with an empty database. Its database lives on a
+persistent Longhorn volume, so after that a new value in Vault reaches the
+Secret and the pod's environment but never the login itself. Change it in
+Vault, then set the same password inside Grafana:
+
+```bash
+# 1. A new random password into Vault, never on a command line
+openssl rand -base64 24 | tr -d '\n' \
+  | vault kv patch secret/k3s-stage/monitoring grafana_admin_password=-
+
+# 2. Sync it into the cluster now rather than within the hour
+kubectl -n monitoring annotate externalsecret grafana-admin-credentials \
+  force-sync="$(date +%s)" --overwrite
+kubectl -n monitoring get externalsecret grafana-admin-credentials   # wait for a fresh LAST SYNC
+
+# 3. Set it in Grafana's database, piped straight from the Secret
+kubectl -n monitoring get secret grafana-admin-credentials \
+    -o jsonpath='{.data.admin-password}' | base64 -d \
+  | kubectl -n monitoring exec -i deploy/kube-prometheus-stack-grafana -c grafana -- \
+      grafana cli admin reset-admin-password --password-from-stdin
+```
+
+`tr -d '\n'` keeps `openssl rand`'s trailing newline out of the password. To
+choose one yourself instead, swap the first pipeline for a silent prompt —
+`read -rs p; printf '%s' "$p" | vault kv patch … grafana_admin_password=-;
+unset p` — `printf` is a shell builtin, so the value still never reaches `ps`.
+
+Step 3 is what actually changes the login; steps 1 and 2 keep Vault in step
+with it, so that if the volume is ever lost, Grafana starts over with the
+password Vault holds. `grafana_admin_user` has the same first-start-only
+behaviour — to rename the admin after the fact, change it in Vault and rename
+the user in Grafana's own user administration to match.
+
 ## Rotating the Prometheus password
 
 Same pipeline, same `patch`. Include every user you want to keep, since the

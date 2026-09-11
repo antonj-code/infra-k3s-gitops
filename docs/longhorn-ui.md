@@ -159,9 +159,12 @@ vault policy read k3s-stage-longhorn
 ```
 
 This assumes the Kubernetes auth method is already enabled at `kubernetes/`
-and pointed at the stage cluster — it is, via `vault-auth-delegator` in
-`infrastructure/base/`, which gives Vault the TokenReview permission it needs
-to validate the service account. `vault auth list` should show it.
+and pointed at the stage cluster. It is — `infra-k3s-bootstrap` registers every
+build with Vault, and `vault-auth-delegator` in `infrastructure/base/` gives
+Vault the TokenReview permission it needs to validate the service account. See
+[Vault integration](vault.md) for both, and for
+`infra-k3s-bootstrap`'s `vault_seed_apps.sh`, which creates a policy and role
+like the ones above in one step. `vault auth list` should show the method.
 
 ### 2. DNS
 
