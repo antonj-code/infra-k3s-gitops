@@ -1,0 +1,27 @@
+# Every longhorn-manager pod serves metrics on :9500, but each reports only
+# the volumes attached on its own node - a scrape through the Service would
+# land on one pod at random and see a fraction of them. A ServiceMonitor
+# scrapes each endpoint behind the Service individually, so all are covered.
+#
+# This lives here rather than in the Longhorn HelmRelease, whose chart can
+# create one itself. Monitoring's volumes are on Longhorn, so on a fresh
+# cluster Longhorn installs before the chart that defines the ServiceMonitor
+# CRD - and a Longhorn release carrying a ServiceMonitor would fail to install,
+# taking every PVC in the cluster with it.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: longhorn
+  namespace: monitoring
+  labels:
+    # kube-prometheus-stack's Prometheus selects only monitors carrying this.
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - longhorn-system
+  selector:
+    matchLabels:
+      app: longhorn-manager
+  endpoints:
+    - port: manager

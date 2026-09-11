@@ -1,0 +1,18 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: monitoring-configs
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./monitoring/configs/stage
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  # ServiceMonitor and PrometheusRule are CRDs that the kube-prometheus-stack
+  # chart installs, not anything in this path. On a fresh cluster they exist
+  # only once `monitoring` is Ready, and until then Flux's dry-run of this
+  # path would fail on every object in it.
+  dependsOn:
+    - name: monitoring

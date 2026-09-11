@@ -30,9 +30,13 @@ infrastructure/
 ├── base/                 # MetalLB, Longhorn, External Secrets, Vault auth, ...
 ├── stage/                # stage overlays: address pools, Traefik, Longhorn UI
 └── prod/
-monitoring/controllers/
-├── base/                 # kube-prometheus-stack
-└── stage/                # Ingresses and Vault-backed secrets
+monitoring/
+├── controllers/
+│   ├── base/             # kube-prometheus-stack
+│   └── stage/            # Ingresses and Vault-backed secrets
+└── configs/
+    ├── base/             # scrape targets and dashboards
+    └── stage/
 ```
 
 ## Where these clusters — and Flux itself — come from
@@ -65,6 +69,9 @@ state. Those are written down under `docs/` rather than left in shell history:
   with it.
 - [Grafana and Prometheus UIs](docs/monitoring-ui.md) — the same Traefik
   setup, with basic auth in front of Prometheus and Grafana's own login.
+- [Scrape targets and dashboards](docs/monitoring-config.md) — adding
+  ServiceMonitors, alert rules and Grafana dashboards as code, and the
+  Longhorn dashboard.
 - [Load test](docs/load-test.md) — running the stress-ng StatefulSet against
   the workers and Longhorn, and cleaning up the volumes it leaves behind.
 
