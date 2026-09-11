@@ -14,7 +14,7 @@ longhorn / grafana / prometheus.jnet.lan
                                        │  kube-proxy spreads connections
                                ┌───────┴───────┐
                                ▼               ▼
-                          traefik pod     traefik pod      (always different nodes)
+                          traefik pod     traefik pod      (two different workers)
                                └───────┬───────┘
                                        ▼
                                      Ingress routes ─▶ each UI's ClusterIP Service
@@ -27,7 +27,7 @@ redundant, not the UIs behind it.
 
 | File | Purpose |
 | --- | --- |
-| `infrastructure/stage/traefik/helmchartconfig.yaml` | Pins `.26`, two replicas, disruption budget, one pod per node |
+| `infrastructure/stage/traefik/helmchartconfig.yaml` | Pins `.26`, two replicas, disruption budget, one pod per node, workers only, resource requests |
 | `clusters/stage/traefik.yaml` | Flux Kustomization; waits for `metallb-pool`, since `.26` must exist in a pool first |
 
 k3s owns the Traefik install itself. Flux only applies the `HelmChartConfig`;
@@ -139,9 +139,12 @@ the first, and would rather wait than do so. `describe` names the reason:
 kubectl -n kube-system describe pod -l app.kubernetes.io/name=traefik | grep -A3 Events
 ```
 
-`didn't match pod topology spread constraints` means no other node could take
-it — every other node full, cordoned or down. On a healthy six-node cluster this
-should not happen; fix the nodes rather than relaxing the rule.
+The event lists a reason per node. `didn't match Pod's node affinity/selector`
+against the three control-plane nodes is expected — that is the workers-only
+rule. `didn't match pod topology spread constraints` against the workers means
+no other worker could take it — the rest full, cordoned or down. With three
+workers that takes two of them out at once; fix the workers rather than
+relaxing the rule.
 
 ## Changing the replica count
 
@@ -157,12 +160,19 @@ it forever.
   answers for `.26`, and another takes over within seconds if it dies. That is
   independent of how many Traefik pods there are. Spreading requests across
   pods is kube-proxy's job, and across backends Traefik's.
-- The pods may land on control-plane nodes — k3s's own chart values tolerate
-  the control-plane taint. That is fine because the Service uses
-  `externalTrafficPolicy: Cluster`: MetalLB announces `.26` from a worker (the
-  L2Advertisement excludes control-plane nodes) and kube-proxy forwards to
-  wherever the pods are. Do not switch it to `Local`. MetalLB would then
-  announce only from nodes running a Traefik pod, and with both pods on
-  control-plane nodes no node would announce `.26` at all.
+- The pods run on workers only, by a node affinity that mirrors the
+  L2Advertisement's selector. It is needed despite the control-plane taint:
+  k3s's own chart values tolerate that taint, and before the affinity both
+  pods landed on the etcd nodes.
+- They have resource requests (50m CPU, 128Mi) and no limits. The workers are
+  what [load-test](load-test.md) saturates, and without requests Traefik
+  would be BestEffort — among the first pods evicted under memory pressure. A
+  memory limit would trade that for an OOM kill, which takes every UI down
+  just the same.
+- The Service stays `externalTrafficPolicy: Cluster`: MetalLB announces `.26`
+  from any worker and kube-proxy forwards to wherever the pods are. `Local`
+  would make MetalLB announce only from a node running a Traefik pod, so every
+  pod reschedule would also move `.26`, and nothing here needs the client IP
+  it would preserve.
 - `prod` has none of this yet — nothing under `clusters/prod/` configures
   Traefik, so it runs with k3s's defaults.

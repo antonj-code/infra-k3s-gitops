@@ -48,3 +48,23 @@ spec:
           matchLabels:
             app.kubernetes.io/name: traefik
             app.kubernetes.io/instance: traefik-kube-system
+    # Workers only. k3s's own values tolerate the control-plane taint (so the
+    # same chart works on a single-node cluster), which left both pods on the
+    # etcd nodes; the taint alone cannot keep them off. Same selector as the
+    # L2Advertisement, so Traefik runs where .26 is announced from.
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: DoesNotExist
+                - key: node-role.kubernetes.io/master
+                  operator: DoesNotExist
+    # The workers are what load-test saturates. Without requests Traefik is
+    # BestEffort and among the first pods evicted under memory pressure. No
+    # limit on purpose: an OOM kill here takes every UI with it.
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
