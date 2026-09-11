@@ -66,7 +66,10 @@ flux -n flux-system reconcile kustomization traefik --with-source
 # 1. k3s ran the upgrade - expect COMPLETIONS 1/1 and an AGE from just now
 kubectl -n kube-system get job helm-install-traefik
 
-# 2. Two pods, Running, on two different NODEs
+# 2. Wait for the rollout to finish, then expect exactly two pods, Running,
+#    on two different NODEs. Mid-rollout there are three - old and new
+#    ReplicaSets side by side - and counting Ready pods then is misleading.
+kubectl -n kube-system rollout status deploy/traefik
 kubectl -n kube-system get pods -l app.kubernetes.io/name=traefik -o wide
 
 # 3. Disruption budget - expect MIN AVAILABLE 1, ALLOWED DISRUPTIONS 1
