@@ -25,7 +25,8 @@ Everything in `infrastructure/stage/longhorn/`, reconciled by
 | `vault-secrets/` | SecretStore, ServiceAccount, CA and the ExternalSecret that materialises `longhorn-basic-auth` |
 
 The Traefik address itself is pinned by `infrastructure/stage/traefik/`, which
-claims `.26` out of `reserved-pool`.
+claims `.26` out of `reserved-pool` and runs Traefik as two replicas — see
+[Traefik](traefik.md).
 
 ## Manual steps
 

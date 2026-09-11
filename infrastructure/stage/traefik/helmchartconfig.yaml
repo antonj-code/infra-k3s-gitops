@@ -16,6 +16,12 @@
 # annotation moves it to .26 afterwards, costing one redeploy mid-bootstrap.
 # Accepted knowingly; .26 itself is never at risk, since reserved-pool has
 # autoAssign off and nothing can take it in the meantime.
+#
+# For the same reason - every UI goes through it - Traefik runs two replicas
+# on different nodes, with a disruption budget so a drain or k3s upgrade
+# never takes both. Losing a node then costs a dropped endpoint rather than
+# the ~5 minutes Kubernetes waits before rescheduling a lone pod. The address
+# does not move and DNS is unaffected. See docs/traefik.md.
 apiVersion: helm.cattle.io/v1
 kind: HelmChartConfig
 metadata:
@@ -26,3 +32,19 @@ spec:
     service:
       annotations:
         metallb.universe.tf/loadBalancerIPs: "192.168.0.26"
+    deployment:
+      replicas: 2
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 1
+    # DoNotSchedule rather than ScheduleAnyway: two replicas on one node is
+    # the failure this exists to prevent, so a second pod that cannot be
+    # placed elsewhere should stay Pending where it is visible.
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: traefik
+            app.kubernetes.io/instance: traefik-kube-system

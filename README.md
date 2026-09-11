@@ -64,6 +64,8 @@ state. Those are written down under `docs/` rather than left in shell history:
 
 - [Vault integration](docs/vault.md) — how in-cluster apps log in to Vault,
   which half `infra-k3s-bootstrap` owns, and adding a new app.
+- [Traefik](docs/traefik.md) — the ingress every UI goes through: its pinned
+  address, its two replicas, and checking that a change actually reached it.
 - [Longhorn UI](docs/longhorn-ui.md) — exposing it through Traefik with
   basic auth backed by Vault, and the one-time MetalLB pool fix that went
   with it.
