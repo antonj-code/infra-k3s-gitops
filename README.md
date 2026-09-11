@@ -69,6 +69,7 @@ state. Those are written down under `docs/` rather than left in shell history:
   with it.
 - [Grafana and Prometheus UIs](docs/monitoring-ui.md) — the same Traefik
   setup, with basic auth in front of Prometheus and Grafana's own login.
+  Also where to find the Grafana admin password.
 - [Scrape targets and dashboards](docs/monitoring-config.md) — adding
   ServiceMonitors, alert rules and Grafana dashboards as code, and the
   Longhorn dashboard.

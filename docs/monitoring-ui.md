@@ -143,6 +143,49 @@ The Grafana admin login lives beside the Prometheus password:
 ExternalSecret and handed to Grafana as `GF_SECURITY_ADMIN_USER` and
 `GF_SECURITY_ADMIN_PASSWORD`.
 
+### Retrieving the admin login
+
+From the repo root, since the CA path is relative:
+
+```bash
+export VAULT_ADDR='https://vault.jnet.lan:8200'
+sed -n '/BEGIN CERTIFICATE/,/END CERTIFICATE/p' \
+  infrastructure/stage/longhorn/vault-secrets/ca-secret.yaml \
+  | sed 's/^ *//' > ~/.vault-jnet-ca.crt
+export VAULT_CACERT=~/.vault-jnet-ca.crt
+vault status                      # expect Sealed: false
+
+vault login                       # the token prompt is hidden
+
+vault kv get -field=grafana_admin_user     secret/k3s-stage/monitoring
+vault kv get -field=grafana_admin_password secret/k3s-stage/monitoring
+```
+
+The token needs `read` on `secret/data/k3s-stage/monitoring` — in practice the
+root token or an admin token. The `k3s-stage-monitoring` role's tokens can read
+it too, but those are issued to Grafana's ServiceAccount, not to people.
+
+Without Vault — it is down, or no token is to hand — the same values are in
+the cluster, in the Secret the ExternalSecret syncs them into:
+
+```bash
+kubectl -n monitoring get secret grafana-admin-credentials \
+  -o jsonpath='{.data.admin-user}' | base64 -d; echo
+kubectl -n monitoring get secret grafana-admin-credentials \
+  -o jsonpath='{.data.admin-password}' | base64 -d; echo
+```
+
+If that password does not log you in, it was changed inside Grafana and not in
+Vault; Grafana reads Vault's value only on first start. Step 3 of
+[Changing the password](#changing-the-password--vault-alone-is-not-enough)
+resets it without needing the old one, and steps 1 and 2 put Vault back in
+step.
+
+The Prometheus login cannot be retrieved at all. Vault holds only its `apr1`
+hash, in `basic_auth_users`; the password itself was never stored. If it is
+lost, set a new one with
+[Rotating the Prometheus password](#rotating-the-prometheus-password).
+
 ### First-time setup
 
 They were seeded — together with the `k3s-stage-monitoring` role and policy —
@@ -155,11 +198,8 @@ bash scripts/vault_seed_apps.sh stage monitoring monitoring grafana-vault-auth \
   --secret grafana_admin_password="$(openssl rand -base64 24)"
 ```
 
-The password is random and never shown. To read it:
-
-```bash
-vault kv get -field=grafana_admin_password secret/k3s-stage/monitoring
-```
+The password is random and never shown;
+[Retrieving the admin login](#retrieving-the-admin-login) reads it back.
 
 ### Changing the password — Vault alone is not enough
 
