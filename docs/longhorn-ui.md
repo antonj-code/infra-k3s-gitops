@@ -165,8 +165,17 @@ to validate the service account. `vault auth list` should show it.
 
 ### 2. DNS
 
-Point `longhorn.jnet.lan` at `192.168.0.26` — Traefik's address, not
-Longhorn's. Nothing in `longhorn-system` holds an external address any more.
+Make `longhorn.jnet.lan` a CNAME to `ingress-stage.jnet.lan`, the A record for
+Traefik's address, `192.168.0.26`. Every Ingress hostname hangs off that one
+record, so if Traefik's address ever moves only it changes. Nothing in
+`longhorn-system` holds an external address any more.
+
+Traefik routes on the Host header, which still carries `longhorn.jnet.lan`
+through the CNAME. Confirm the chain resolves:
+
+```bash
+dig +short longhorn.jnet.lan   # ingress-stage.jnet.lan. then 192.168.0.26
+```
 
 ### 3. Push, then unblock MetalLB
 

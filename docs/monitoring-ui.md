@@ -74,10 +74,13 @@ vault kv get secret/k3s-stage/monitoring
 
 No new role or policy is needed: the key lives in the path the
 `k3s-stage-monitoring` role can already read. Confirm that is true rather than
-assuming it:
+assuming it. The policy is not named after the role, as it is for Longhorn, so
+go through the role to find it:
 
 ```bash
-vault policy read k3s-stage-monitoring   # expect secret/data/k3s-stage/monitoring
+vault read -field=token_policies auth/kubernetes/role/k3s-stage-monitoring
+# [k3s-stage-monitoring-read]
+vault policy read k3s-stage-monitoring-read   # expect secret/data/k3s-stage/monitoring
 ```
 
 ### 2. Push and check before switching DNS
@@ -104,10 +107,17 @@ next.
 
 ### 3. DNS
 
-- `grafana.jnet.lan` → `192.168.0.26` (was `.24`)
-- `prometheus.jnet.lan` → `192.168.0.26` (new)
+Both become CNAMEs to `ingress-stage.jnet.lan`, Traefik's A record, as
+`longhorn.jnet.lan` is:
 
-Both point at Traefik, as `longhorn.jnet.lan` does.
+- `grafana.jnet.lan` → CNAME `ingress-stage.jnet.lan` (was an A record to
+  `.24` — delete it first, a CNAME cannot share a name with another record)
+- `prometheus.jnet.lan` → CNAME `ingress-stage.jnet.lan` (new)
+
+```bash
+dig +short grafana.jnet.lan      # ingress-stage.jnet.lan. then 192.168.0.26
+dig +short prometheus.jnet.lan
+```
 
 ## Troubleshooting
 
