@@ -36,13 +36,10 @@ spec:
         existingSecret: grafana-admin-credentials
         userKey: admin-user
         passwordKey: admin-password
-      # Pinned so grafana.jnet.lan keeps resolving to the same address
-      # across rebuilds. .24 lives in reserved-pool, which has autoAssign
-      # off, so nothing else can claim it while this service is down.
+      # Reached through Traefik, not directly - the per-cluster overlay owns
+      # the Ingress and sets root_url to match its hostname.
       service:
-        type: LoadBalancer
-        annotations:
-          metallb.universe.tf/loadBalancerIPs: "192.168.0.24"
+        type: ClusterIP
       persistence:
         enabled: true
         type: pvc

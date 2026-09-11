@@ -3,3 +3,26 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - ../../base/kube-prometheus-stack/
+  - middlewares.yaml
+  - ingress.yaml
+patches:
+  # Both UIs build absolute links from their own idea of where they live -
+  # Grafana for redirects after login, Prometheus for alert generatorURLs -
+  # so they have to be told the hostname Traefik serves them on.
+  - target:
+      kind: HelmRelease
+      name: kube-prometheus-stack
+    patch: |
+      apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      metadata:
+        name: kube-prometheus-stack
+      spec:
+        values:
+          grafana:
+            grafana.ini:
+              server:
+                root_url: https://grafana.jnet.lan
+          prometheus:
+            prometheusSpec:
+              externalUrl: https://prometheus.jnet.lan

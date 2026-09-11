@@ -7,7 +7,7 @@
 # one thing the most DNS records point at, and it must not be auto-assigned:
 # an auto-assigned address is reallocated from primary-pool if the Service is
 # ever recreated, which would silently break every name at once. Pinning it
-# claims .26 out of reserved-pool - the same convention Grafana uses at .24.
+# claims .26 out of reserved-pool.
 #
 # This is deliberately here and not in infra-k3s-bootstrap's k3s manifests
 # directory: that repo stands the cluster up, Flux configures it. The cost is

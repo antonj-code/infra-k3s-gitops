@@ -23,9 +23,10 @@ spec:
   # bookmarks, scrape configs. autoAssign is off so MetalLB never hands one
   # to a service that didn't ask for it explicitly; a service claims one with
   # the metallb.universe.tf/loadBalancerIPs annotation. Allocations:
-  #   .24  grafana.jnet.lan
-  #   .26  traefik (k3s built-in ingress; longhorn.jnet.lan and anything
-  #        else fronted by an Ingress resolves here, not to its own address)
+  #   .24  free (was grafana.jnet.lan, now behind traefik)
+  #   .26  traefik (k3s built-in ingress; longhorn, grafana, prometheus and
+  #        anything else fronted by an Ingress resolves here, not to its
+  #        own address)
   autoAssign: false
   addresses:
   - 192.168.0.24-192.168.0.27

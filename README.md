@@ -47,6 +47,8 @@ state. Those are written down under `docs/` rather than left in shell history:
 
 - [Longhorn UI](docs/longhorn-ui.md) — exposing it through Traefik with
   basic auth backed by Vault, and the one-time MetalLB pool fix it depends on.
+- [Grafana and Prometheus UIs](docs/monitoring-ui.md) — the same Traefik
+  setup, with basic auth in front of Prometheus and Grafana's own login.
 
 ## Current state
 

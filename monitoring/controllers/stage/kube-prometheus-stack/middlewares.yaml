@@ -1,0 +1,26 @@
+# Basic auth is only as private as the connection carrying it, so plain-HTTP
+# requests are bounced to 443 before the credential prompt is ever issued.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-https
+  namespace: monitoring
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+# Prometheus has no login of its own, so Traefik supplies the only
+# authentication in front of it. Not used for Grafana, which has its own:
+# Traefik forwards the Authorization header, and Grafana would try it as a
+# Grafana login and reject it. The `users` key of this Secret comes from
+# Vault via the ExternalSecret.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: basic-auth
+  namespace: monitoring
+spec:
+  basicAuth:
+    secret: basic-auth
+    realm: Monitoring

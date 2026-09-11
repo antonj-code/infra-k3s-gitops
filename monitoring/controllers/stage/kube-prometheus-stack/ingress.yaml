@@ -1,0 +1,55 @@
+# Middlewares are referenced as <namespace>-<name>@kubernetescrd and are
+# applied left to right. The two hosts need different chains, and the chain
+# is set per Ingress, hence two of them.
+#
+# No secretName under tls: Traefik serves its own default (self-signed)
+# certificate, as for longhorn.jnet.lan.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana
+  namespace: monitoring
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      monitoring-redirect-https@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - grafana.jnet.lan
+  rules:
+    - host: grafana.jnet.lan
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-grafana
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prometheus
+  namespace: monitoring
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      monitoring-redirect-https@kubernetescrd,monitoring-basic-auth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - prometheus.jnet.lan
+  rules:
+    - host: prometheus.jnet.lan
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-prometheus
+                port:
+                  number: 9090
