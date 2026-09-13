@@ -1,0 +1,8 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: aqua
+  namespace: security
+spec:
+  interval: 12h
+  url: https://aquasecurity.github.io/helm-charts/
