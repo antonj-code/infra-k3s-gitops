@@ -35,8 +35,8 @@ spec:
     # Tell Trivy to use the k3s CIS profile and run daily
     compliance:
       cron: "0 0 * * *"
-      reportspec:
-        compliance.aquasecurity.github.io/cis-k3s-1.24: true
+      specs:
+        - k3s-cis-1.24
         
     # K3s has specific paths we must mount to the node collector pod.
     nodeCollector:
