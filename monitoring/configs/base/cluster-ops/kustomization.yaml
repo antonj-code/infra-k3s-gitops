@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+configMapGenerator:
+  - name: grafana-dashboard-k3s-repave
+    files:
+      - repave.json
+    options:
+      labels:
+        grafana_dashboard: "1"
+      disableNameSuffixHash: true
+  - name: grafana-dashboard-k3s-kernel-rollout
+    files:
+      - kernel-rollout.json
+    options:
+      labels:
+        grafana_dashboard: "1"
+      disableNameSuffixHash: true
