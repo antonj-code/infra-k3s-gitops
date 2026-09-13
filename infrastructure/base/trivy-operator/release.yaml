@@ -8,56 +8,46 @@ spec:
   chart:
     spec:
       chart: trivy-operator
-      version: "0.36.0"
+      version: 0.36.0
       sourceRef:
         kind: HelmRepository
         name: aqua
         namespace: security
   values:
-    # Expose Prometheus Metrics so we can build Grafana Dashboards (Option 1)
     serviceMonitor:
       enabled: true
       labels:
         release: kube-prometheus-stack
-      
-    # Configure Trivy strictly for Node CIS compliance (Kube-bench equivalent)
-    # Disabling image vulnerability scanning to save cluster resources since you 
-    # only asked for CIS benchmarks.
     trivy:
       imageVulnerabilityScanning:
         enabled: false
-        
     trivyOperator:
       vulnerabilityScannerEnabled: false
-      # We want config audits (CIS) enabled
       configAuditScannerEnabled: true
-      
-    # Tell Trivy to use the k3s CIS profile and run daily
     compliance:
-      cron: "0 0 * * *"
+      cron: 0 0 * * *
       specs:
-        - k8s-cis-1.23
-        
-    # K3s has specific paths we must mount to the node collector pod.
+      - k8s-cis-1.23
     nodeCollector:
       tolerations:
-        - key: "node-role.kubernetes.io/control-plane"
-          operator: "Exists"
-          effect: "NoSchedule"
-        - key: "node-role.kubernetes.io/master"
-          operator: "Exists"
-          effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
       volumeMounts:
-        - name: var-lib-rancher-k3s
-          mountPath: /var/lib/rancher/k3s
-          readOnly: true
-        - name: etc-systemd
-          mountPath: /etc/systemd
-          readOnly: true
+      - name: var-lib-rancher-k3s
+        mountPath: /var/lib/rancher/k3s
+        readOnly: true
+      - name: etc-systemd
+        mountPath: /etc/systemd
+        readOnly: true
       volumes:
-        - name: var-lib-rancher-k3s
-          hostPath:
-            path: /var/lib/rancher/k3s
-        - name: etc-systemd
-          hostPath:
-            path: /etc/systemd
+      - name: var-lib-rancher-k3s
+        hostPath:
+          path: /var/lib/rancher/k3s
+      - name: etc-systemd
+        hostPath:
+          path: /etc/systemd
+    excludeNamespaces: longhorn-system,kube-system
