@@ -17,6 +17,8 @@ spec:
     # Expose Prometheus Metrics so we can build Grafana Dashboards (Option 1)
     serviceMonitor:
       enabled: true
+      labels:
+        release: kube-prometheus-stack
       
     # Configure Trivy strictly for Node CIS compliance (Kube-bench equivalent)
     # Disabling image vulnerability scanning to save cluster resources since you 
