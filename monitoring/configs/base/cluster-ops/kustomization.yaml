@@ -16,3 +16,10 @@ configMapGenerator:
       labels:
         grafana_dashboard: "1"
       disableNameSuffixHash: true
+  - name: grafana-dashboard-trivy-compliance
+    files:
+      - trivy-compliance.json
+    options:
+      labels:
+        grafana_dashboard: "1"
+      disableNameSuffixHash: true
