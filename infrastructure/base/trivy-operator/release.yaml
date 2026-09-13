@@ -50,7 +50,7 @@ spec:
       - name: etc-systemd
         hostPath:
           path: /etc/systemd
-    excludeNamespaces: longhorn-system,kube-system
+    excludeNamespaces: longhorn-system,kube-system,monitoring,metallb-system,external-secrets
     podSecurityContext:
       runAsUser: 10000
       runAsGroup: 10000

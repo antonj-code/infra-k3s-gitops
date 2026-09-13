@@ -127,7 +127,7 @@
       },
       "targets": [
         {
-          "expr": "sum(trivy_resource_configaudits{namespace!~\"longhorn-system|kube-system\",severity=\"Critical\"}) or vector(0)",
+          "expr": "sum(trivy_resource_configaudits{namespace!~\"longhorn-system|kube-system|monitoring|metallb-system|external-secrets\",severity=\"Critical\"}) or vector(0)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -155,7 +155,7 @@
       },
       "targets": [
         {
-          "expr": "sum(trivy_resource_configaudits{namespace!~\"longhorn-system|kube-system\",severity=\"High\"}) or vector(0)",
+          "expr": "sum(trivy_resource_configaudits{namespace!~\"longhorn-system|kube-system|monitoring|metallb-system|external-secrets\",severity=\"High\"}) or vector(0)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -183,7 +183,7 @@
       },
       "targets": [
         {
-          "expr": "sum(trivy_resource_configaudits{namespace!~\"longhorn-system|kube-system\",severity=\"Medium\"}) or vector(0)",
+          "expr": "sum(trivy_resource_configaudits{namespace!~\"longhorn-system|kube-system|monitoring|metallb-system|external-secrets\",severity=\"Medium\"}) or vector(0)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
@@ -211,7 +211,7 @@
       },
       "targets": [
         {
-          "expr": "sum(trivy_resource_configaudits{namespace!~\"longhorn-system|kube-system\",severity=\"Low\"}) or vector(0)",
+          "expr": "sum(trivy_resource_configaudits{namespace!~\"longhorn-system|kube-system|monitoring|metallb-system|external-secrets\",severity=\"Low\"}) or vector(0)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
