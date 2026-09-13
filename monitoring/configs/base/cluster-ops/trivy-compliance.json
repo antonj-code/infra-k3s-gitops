@@ -249,7 +249,7 @@
       },
       "targets": [
         {
-          "expr": "sum(trivy_clusterrole_clusterrbacassessments{name!~\".*(flux-system|longhorn|kube-prometheus).*\",severity=~\"Critical|High\"}) or vector(0)",
+          "expr": "sum(trivy_clusterrole_clusterrbacassessments{severity=~\"Critical|High\"}) or vector(0)",
           "refId": "A",
           "datasource": {
             "type": "prometheus",
