@@ -12,7 +12,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "targets": [
         {
-          "expr": "sum(trivy_cluster_compliance{status=\"PASS\"})",
+          "expr": "sum(trivy_cluster_compliance{status=\"Pass\"})",
           "refId": "A",
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
@@ -34,7 +34,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "targets": [
         {
-          "expr": "sum(trivy_cluster_compliance{status=\"FAIL\"})",
+          "expr": "sum(trivy_cluster_compliance{status=\"Fail\"})",
           "refId": "A",
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
