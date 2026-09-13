@@ -1,34 +1,29 @@
 # Trivy Security Scanning
 
-Trivy Operator continuously monitors the cluster for vulnerabilities, exposed secrets, RBAC misconfigurations, and workload compliance (CIS Benchmarks).
+Trivy Operator watches the cluster for vulnerabilities, exposed secrets, and bad configurations. The results feed into the Grafana compliance dashboard.
 
-## Security Exclusions
+## Exclusions
 
-Not all workloads can (or should) adhere to strict Kubernetes security contexts. Low-level infrastructure operators (like CNI plugins, GitOps controllers, and storage drivers) explicitly require elevated host access, `root` privileges, and wildcard RBAC roles to do their jobs.
+Not everything should run with a locked-down security context. Infrastructure tools like storage drivers and GitOps controllers actually need `root` access and wildcard RBAC roles to function. 
 
-To prevent alert fatigue and keep the compliance dashboard actionable, trusted third-party infrastructure is globally excluded from Trivy's config audits. 
+Trying to force third-party Helm charts to run as unprivileged users usually just breaks them. Instead, we exclude trusted infrastructure so Trivy only yells at us about our own workloads.
 
-### Adding a new trusted namespace
+**To ignore a new infrastructure tool:**
+Don't hack up its Helm chart. Just append its namespace to `excludeNamespaces` under `values` in `infrastructure/base/trivy-operator/release.yaml`.
 
-If you install a new infrastructure component that throws expected security alerts (e.g., a new CSI driver), you should exclude its namespace rather than attempting to rewrite its Helm chart `securityContext`.
+## RBAC noise
 
-1. Open `infrastructure/base/trivy-operator/release.yaml`.
-2. Append the new namespace to the comma-separated `excludeNamespaces` list under the `values` block.
-3. Commit and push.
+`ClusterRoles` are global, so excluding namespaces doesn't hide their RBAC alerts.
 
-### RBAC Assessments (ClusterRoles)
+You will see dozens of Critical/High RBAC alerts in the dashboard. This is intentional. Core Kubernetes roles (like `system:node` or `cluster-admin`) and operators (like `flux-system`) literally have wildcard access. Trivy flags them because they are inherently risky, but we need them.
 
-Because `ClusterRoles` are non-namespaced, they cannot be filtered out via `excludeNamespaces`. 
+We leave them unfiltered on the dashboard as an accepted baseline. If the number jumps higher than the baseline, go check if a new custom role got too much power.
 
-By design, this repository does **not** filter out core Kubernetes roles (like `system:node`) or trusted operator roles (like `cluster-admin` or `flux-system`) from the Grafana dashboard or Trivy reports. These roles are mathematically true risks (e.g., they literally have `*` wildcard access), and are left visible as a documented, accepted baseline risk. 
+## Hardening your own apps
 
-If the baseline number of RBAC alerts climbs unexpectedly, it means a new role has been provisioned with overly broad permissions and should be audited.
+For the actual apps you deploy, lock them down so they pass the CIS benchmarks. 
 
-## Hardening Workloads
-
-For standard web services and applications you deploy yourself, they should be strictly hardened to pass Trivy's CIS benchmarks.
-
-At a minimum, ensure the deployment's Pod template includes a strict `securityContext`:
+At a minimum, the deployment needs a `securityContext` that drops all capabilities and runs as a non-root user:
 
 ```yaml
     spec:
