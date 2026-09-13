@@ -77,10 +77,12 @@ state. Those are written down under `docs/` rather than left in shell history:
   Longhorn dashboard.
 - [Load test](docs/load-test.md) — running the stress-ng StatefulSet against
   the workers and Longhorn, and cleaning up the volumes it leaves behind.
+- [Trivy Security Scanning](docs/trivy.md) — how to manage security policies,
+  exclusions for trusted infrastructure, and understanding the Grafana compliance dashboard.
 
 ## Current state
 
 Both clusters are bootstrapped with Flux v2.9.5.
 
-- **stage** runs the platform everything else builds on — MetalLB, Longhorn, External Secrets backed by Vault, and configuration for the Traefik that k3s ships with — plus kube-prometheus-stack. The Longhorn, Grafana and Prometheus UIs are served through Traefik. A `load-test` StatefulSet is there for exercising storage and scheduling.
+- **stage** runs the platform everything else builds on — MetalLB, Longhorn, External Secrets backed by Vault, and configuration for the Traefik that k3s ships with — plus kube-prometheus-stack and Trivy Operator for continuous security scanning. The Longhorn, Grafana and Prometheus UIs are served through Traefik. A `load-test` StatefulSet is there for exercising storage and scheduling.
 - **prod** runs nothing beyond Flux itself yet. Its MetalLB address pools are defined under `infrastructure/prod/` but not yet wired into `clusters/prod/`.
