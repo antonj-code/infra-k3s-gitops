@@ -40,6 +40,8 @@ spec:
         
     # K3s has specific paths we must mount to the node collector pod.
     nodeCollector:
+      tolerations:
+        - operator: Exists
       volumeMounts:
         - name: var-lib-rancher-k3s
           mountPath: /var/lib/rancher/k3s
