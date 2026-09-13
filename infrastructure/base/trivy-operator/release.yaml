@@ -41,7 +41,12 @@ spec:
     # K3s has specific paths we must mount to the node collector pod.
     nodeCollector:
       tolerations:
-        - operator: Exists
+        - key: "node-role.kubernetes.io/control-plane"
+          operator: "Exists"
+          effect: "NoSchedule"
+        - key: "node-role.kubernetes.io/master"
+          operator: "Exists"
+          effect: "NoSchedule"
       volumeMounts:
         - name: var-lib-rancher-k3s
           mountPath: /var/lib/rancher/k3s
