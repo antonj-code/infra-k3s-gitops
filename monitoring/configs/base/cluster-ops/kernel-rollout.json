@@ -48,7 +48,7 @@
       "description": "Headline shot. Old kernel steps down, new kernel steps up, one node at a time.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 10,
@@ -100,7 +100,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "count by (kernel_version) (kube_node_info)",
@@ -117,7 +117,7 @@
       "description": "Use this one instead if kube-state-metrics is not deployed. Same picture, different source.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 10,
@@ -169,7 +169,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "count by (release) (node_uname_info)",
@@ -186,7 +186,7 @@
       "description": "Shot 5. Each worker replacement should show a bump to degraded that returns to healthy before the next node starts. Check the label name first - it may be pvc, volume or pvc_name depending on the Longhorn version.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 10,
@@ -234,7 +234,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "longhorn_volume_robustness",

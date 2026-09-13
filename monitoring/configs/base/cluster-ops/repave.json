@@ -68,7 +68,7 @@
         "type": "query",
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
+          "uid": "prometheus"
         },
         "query": "label_values(kube_node_info, kernel_version)",
         "refresh": 2,
@@ -125,7 +125,7 @@
       "description": "Dips by one during each rebuild: the cluster runs at N-1 the whole way through.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 4,
@@ -171,7 +171,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "count(kube_node_info)",
@@ -187,7 +187,7 @@
       "title": "Nodes Ready",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 4,
@@ -240,7 +240,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "count(kube_node_status_condition{condition=\"Ready\", status=\"true\"} == 1) or vector(0)",
@@ -257,7 +257,7 @@
       "description": "Pick the new kernel in the 'New kernel' dropdown at the top. Goes 0 -> 6 over the run.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 4,
@@ -306,7 +306,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "count(kube_node_info{kernel_version=\"$new_kernel\"}) or vector(0)",
@@ -323,7 +323,7 @@
       "description": "Non-zero while replicas rebuild. Must return to 0 before the next node is touched.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 4,
@@ -372,7 +372,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "count(longhorn_volume_robustness == 2) or vector(0)",
@@ -402,7 +402,7 @@
       "description": "Headline shot. Old kernel steps down, new kernel steps up, one node at a time. Stacked, so the total stays flat at 6: same cluster, new image.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 9,
@@ -454,7 +454,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "count by (kernel_version) (kube_node_info)",
@@ -471,7 +471,7 @@
       "description": "Registered vs Ready. Each replacement removes a node before its replacement exists, so both lines dip by one. This is the honest cost of replace-in-place.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 9,
@@ -548,7 +548,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "count(kube_node_info)",
@@ -560,7 +560,7 @@
           "refId": "B",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "count(kube_node_status_condition{condition=\"Ready\", status=\"true\"} == 1) or vector(0)",
@@ -577,7 +577,7 @@
       "description": "After shot. Every node is minutes old but the names are unchanged.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 5,
@@ -624,7 +624,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "time() - kube_node_created",
@@ -655,7 +655,7 @@
       "description": "The best single picture of the repave. A replaced worker's data disk is destroyed with the VM, so its usage drops to zero and then climbs back as Longhorn rebuilds replicas from the surviving copies. The rollout waits for that climb to finish before touching the next node.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 9,
@@ -703,7 +703,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum by (node) (longhorn_disk_usage_bytes)",
@@ -720,7 +720,7 @@
       "description": "0 unknown (detached), 1 healthy, 2 degraded, 3 faulted. Each worker replacement should show a bump to degraded that returns to healthy before the next node starts.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 9,
@@ -791,7 +791,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "longhorn_volume_robustness",
@@ -808,7 +808,7 @@
       "description": "The width of each bump is the wait for data. The widest bump is the number for the post.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -854,7 +854,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "count(longhorn_volume_robustness == 2) or vector(0)",
@@ -871,7 +871,7 @@
       "description": "The storage layer's own view of each node leaving and rejoining.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -918,7 +918,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "longhorn_node_status{condition=\"ready\"}",
@@ -930,7 +930,7 @@
           "refId": "B",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "longhorn_node_status{condition=\"schedulable\"}",
@@ -960,7 +960,7 @@
       "description": "Single-replica apps on Longhorn restart once per node move. A dip here is a restart, not data loss - pair it with the 7-day history panel in the post.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -1008,7 +1008,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "max by (pod) (kube_pod_status_ready{condition=\"true\", pod=~\"$apps\"})",
@@ -1025,7 +1025,7 @@
       "description": "Workload churn as pods are evicted and rescheduled. Should return to its starting level after each node.",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -1070,7 +1070,7 @@
           "refId": "A",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(kube_pod_status_phase{phase=\"Running\"})",
@@ -1082,7 +1082,7 @@
           "refId": "B",
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(kube_pod_status_phase{phase=\"Pending\"})",
