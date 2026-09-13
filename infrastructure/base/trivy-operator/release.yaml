@@ -51,3 +51,16 @@ spec:
         hostPath:
           path: /etc/systemd
     excludeNamespaces: longhorn-system,kube-system
+    podSecurityContext:
+      runAsUser: 10000
+      runAsGroup: 10000
+      fsGroup: 10000
+      runAsNonRoot: true
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      privileged: false
+      capabilities:
+        drop:
+        - ALL
