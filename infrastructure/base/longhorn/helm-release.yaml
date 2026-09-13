@@ -30,9 +30,16 @@ spec:
       patches:
       - target:
           kind: Deployment
-        patch: "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  annotations:\n\
-          \    trivy.aquasecurity.github.io/ignore-audit-policies: \"AVD-KSV-0001,AVD-KSV-0003,AVD-KSV-0004,AVD-KSV-0011,AVD-KSV-0012,AVD-KSV-0014,AVD-KSV-0015,AVD-KSV-0016,AVD-KSV-0017,AVD-KSV-0018,AVD-KSV-0020,AVD-KSV-0021,AVD-KSV-0023,AVD-KSV-0030,AVD-KSV-0036,AVD-KSV-0104,AVD-KSV-0105,AVD-KSV-0106,AVD-KSV-0118,AVD-KSV-0121,AVD-KSV-0125\""
+        patch: "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: ignored\n\
+          \  annotations:\n    trivy.aquasecurity.github.io/ignore-audit-policies:\
+          \ \"AVD-KSV-0001,AVD-KSV-0003,AVD-KSV-0004,AVD-KSV-0011,AVD-KSV-0012,AVD-KSV-0014,AVD-KSV-0015,AVD-KSV-0016,AVD-KSV-0017,AVD-KSV-0018,AVD-KSV-0020,AVD-KSV-0021,AVD-KSV-0023,AVD-KSV-0030,AVD-KSV-0036,AVD-KSV-0104,AVD-KSV-0105,AVD-KSV-0106,AVD-KSV-0118,AVD-KSV-0121,AVD-KSV-0125\""
       - target:
           kind: DaemonSet
-        patch: "apiVersion: apps/v1\nkind: DaemonSet\nmetadata:\n  annotations:\n\
-          \    trivy.aquasecurity.github.io/ignore-audit-policies: \"AVD-KSV-0001,AVD-KSV-0003,AVD-KSV-0004,AVD-KSV-0011,AVD-KSV-0012,AVD-KSV-0014,AVD-KSV-0015,AVD-KSV-0016,AVD-KSV-0017,AVD-KSV-0018,AVD-KSV-0020,AVD-KSV-0021,AVD-KSV-0023,AVD-KSV-0030,AVD-KSV-0036,AVD-KSV-0104,AVD-KSV-0105,AVD-KSV-0106,AVD-KSV-0118,AVD-KSV-0121,AVD-KSV-0125\""
+        patch: "apiVersion: apps/v1\nkind: DaemonSet\nmetadata:\n  name: ignored\n\
+          \  annotations:\n    trivy.aquasecurity.github.io/ignore-audit-policies:\
+          \ \"AVD-KSV-0001,AVD-KSV-0003,AVD-KSV-0004,AVD-KSV-0011,AVD-KSV-0012,AVD-KSV-0014,AVD-KSV-0015,AVD-KSV-0016,AVD-KSV-0017,AVD-KSV-0018,AVD-KSV-0020,AVD-KSV-0021,AVD-KSV-0023,AVD-KSV-0030,AVD-KSV-0036,AVD-KSV-0104,AVD-KSV-0105,AVD-KSV-0106,AVD-KSV-0118,AVD-KSV-0121,AVD-KSV-0125\""
+      - target:
+          kind: ReplicaSet
+        patch: "apiVersion: apps/v1\nkind: ReplicaSet\nmetadata:\n  name: ignored\n\
+          \  annotations:\n    trivy.aquasecurity.github.io/ignore-audit-policies:\
+          \ \"AVD-KSV-0001,AVD-KSV-0003,AVD-KSV-0004,AVD-KSV-0011,AVD-KSV-0012,AVD-KSV-0014,AVD-KSV-0015,AVD-KSV-0016,AVD-KSV-0017,AVD-KSV-0018,AVD-KSV-0020,AVD-KSV-0021,AVD-KSV-0023,AVD-KSV-0030,AVD-KSV-0036,AVD-KSV-0104,AVD-KSV-0105,AVD-KSV-0106,AVD-KSV-0118,AVD-KSV-0121,AVD-KSV-0125\""
