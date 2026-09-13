@@ -36,7 +36,7 @@ spec:
     compliance:
       cron: "0 0 * * *"
       specs:
-        - k3s-cis-1.24
+        - k8s-cis-1.23
         
     # K3s has specific paths we must mount to the node collector pod.
     nodeCollector:
