@@ -239,7 +239,15 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "text", "value": null },
+              { "color": "green", "value": 1 },
+              { "color": "orange", "value": 2 },
+              { "color": "red", "value": 3 }
+            ]
+          },
           "mappings": [
             {
               "type": "value",
@@ -348,6 +356,19 @@
                     }
                   }
                 ]
+              },
+              { "id": "color", "value": { "mode": "thresholds" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "text", "value": null },
+                    { "color": "green", "value": 1 },
+                    { "color": "orange", "value": 2 },
+                    { "color": "red", "value": 3 }
+                  ]
+                }
               },
               { "id": "custom.cellOptions", "value": { "type": "color-background" } }
             ]
