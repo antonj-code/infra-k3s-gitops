@@ -225,7 +225,7 @@
       "id": 5,
       "type": "state-timeline",
       "title": "Volume robustness",
-      "description": "When each volume lost or regained replicas.",
+      "description": "Replica health of each volume over time. Green = all replicas healthy, orange = degraded (a replica is down, still serving), red = faulted (no healthy replicas), grey = unknown. A color change marks when a volume lost or regained replicas.",
       "gridPos": { "h": 7, "w": 24, "x": 0, "y": 9 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
