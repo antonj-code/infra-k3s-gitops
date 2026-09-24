@@ -26,3 +26,22 @@ patches:
           prometheus:
             prometheusSpec:
               externalUrl: https://prometheus.jnet.lan
+  # k3s embeds etcd in the server process, so there are no component=etcd
+  # pods for the chart's Service to select and the etcd dashboard stays
+  # empty. List the control-plane nodes instead; k3s serves etcd metrics on
+  # :2381 of each. Update this when a control-plane node's IP changes.
+  - target:
+      kind: HelmRelease
+      name: kube-prometheus-stack
+    patch: |
+      apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      metadata:
+        name: kube-prometheus-stack
+      spec:
+        values:
+          kubeEtcd:
+            endpoints:
+              - 10.20.20.11
+              - 10.20.20.12
+              - 10.20.20.13
